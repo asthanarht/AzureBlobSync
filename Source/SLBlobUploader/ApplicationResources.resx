@@ -127,7 +127,7 @@
     <value>Please select a file to upload.</value>
   </data>
   <data name="SuccessfulUpload" xml:space="preserve">
-    <value>File of length {0} has been uploaded successfully in {1} seconds.</value>
+    <value>File of size {0} has been uploaded successfully in {1} seconds.</value>
   </data>
   <data name="UnknownErrorOccured" xml:space="preserve">
     <value>File could not be uploaded due to an unknown error. Retry after sometime.</value>

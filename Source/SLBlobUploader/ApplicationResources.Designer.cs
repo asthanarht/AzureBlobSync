@@ -88,7 +88,7 @@ namespace SLBlobUploader.Control {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File of length {0} has been uploaded successfully in {1} seconds..
+        ///   Looks up a localized string similar to File of size {0} has been uploaded successfully in {1} seconds..
         /// </summary>
         internal static string SuccessfulUpload {
             get {
