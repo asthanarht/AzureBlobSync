@@ -117,7 +117,10 @@ namespace SLBlobUploader.Code.Infrastructure
         /// </summary>
         public void CancelUpload()
         {
-            this.fileUploader.CancelUpload();
+            if (this.fileUploader != null)
+            {
+                this.fileUploader.CancelUpload();
+            }
         }
 
         /// <summary>

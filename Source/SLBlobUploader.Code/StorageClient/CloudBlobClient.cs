@@ -87,8 +87,11 @@ namespace SLBlobUploader.Code.StorageClient
         /// </summary>
         public void CancelUpload()
         {
-            this.cancellationTokens.Cancel();
-            this.NotifyClient(Constants.UploadCompleteReason.UserCancelled);
+            if (this.cancellationTokens != null)
+            {
+                this.cancellationTokens.Cancel();
+                this.NotifyClient(Constants.UploadCompleteReason.UserCancelled);
+            }
         }
 
         /// <summary>

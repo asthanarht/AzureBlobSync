@@ -6,6 +6,7 @@ namespace SLBlobUploader.Control
     using System.Globalization;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Windows.Threading;
     using SLBlobUploader.Code.Infrastructure;
 
     /// <summary>
@@ -41,7 +42,7 @@ namespace SLBlobUploader.Control
         /// <summary>
         /// Shared access signature URL of the container where to upload files.
         /// </summary>
-        private string sasUrl;
+        private string sasUrl = string.Empty;
 
         /// <summary>
         /// Timer to time operation.
@@ -51,15 +52,39 @@ namespace SLBlobUploader.Control
         /// <summary>
         /// User file to upload.
         /// </summary>
-        private UserFile userFile;
+        private UserFile userFile = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainPage"/> class.
         /// </summary>
-        /// <param name="sasUrl">The shared access signature URL.</param>
-        public MainPage(string sasUrl)
+        /// <param name="sasUrl">The SAS URL.</param>
+        /// <param name="timeOutSeconds">The time out interval of SAS URL in seconds.</param>
+        public MainPage(string sasUrl, string timeOutSeconds)
         {
             this.sasUrl = sasUrl;
+            var sasExpiryTimer = new DispatcherTimer();
+            sasExpiryTimer.Interval = new TimeSpan(0, 0, Convert.ToInt32(timeOutSeconds));
+            sasExpiryTimer.Tick += new EventHandler((o, e) =>
+            {
+                if (this.files != null && this.files.Count > 0)
+                {
+                    this.userFile.CancelUpload();
+                    this.Dispatcher.BeginInvoke(() =>
+                    {
+                        this.lblMessage.Text = ApplicationResources.SASExpiredInUploadSession;
+                    });
+                }
+                else
+                {
+                    this.lblMessage.Text = ApplicationResources.SASExpired;
+                }
+
+                this.btnBrowse.IsEnabled = false;
+                this.btnUpload.IsEnabled = false;
+                this.prgUpload.IsIndeterminate = false;
+                this.txtFileName.Text = string.Empty;
+            });
+            sasExpiryTimer.Start();
             this.InitializeComponent();
         }
 
@@ -110,27 +135,33 @@ namespace SLBlobUploader.Control
         {
             this.Dispatcher.BeginInvoke(() =>
                 {
-                    switch (e.Reason)
+                    if (this.userFile != null)
                     {
-                        case Constants.UploadCompleteReason.UploadCommitted:
-                            var duration = DateTime.Now - this.operationStartTime;
-                            var fileSizeInKB = (float)userFile.FileStream.Length / BytesPerKb;
-                            var fileSizeMessage = fileSizeInKB > BytesPerKb ? string.Concat(((float)fileSizeInKB / BytesPerKb).ToString(), " MB") : string.Concat(fileSizeInKB.ToString(), " KB");
-                            this.lblMessage.Text = string.Format(
-                                CultureInfo.CurrentCulture, ApplicationResources.SuccessfulUpload, fileSizeMessage, duration.TotalSeconds);
-                            break;
-                        case Constants.UploadCompleteReason.ErrorOccurred:
-                            this.lblMessage.Text = string.Format(CultureInfo.CurrentCulture, ApplicationResources.UploadFailed, e.ErrorMessage);
-                            break;
-                        case Constants.UploadCompleteReason.UserCancelled:
-                            this.lblMessage.Text = string.Format(CultureInfo.CurrentCulture, ApplicationResources.UploadCancelled);
-                            break;
-                        default:
-                            this.lblMessage.Text = string.Format(CultureInfo.CurrentCulture, ApplicationResources.UnknownErrorOccured);
-                            break;
+                        switch (e.Reason)
+                        {
+                            case Constants.UploadCompleteReason.UploadCommitted:
+                                var duration = DateTime.Now - this.operationStartTime;
+                                var fileSizeInKB = (float)userFile.FileStream.Length / BytesPerKb;
+                                var fileSizeMessage = fileSizeInKB > BytesPerKb ? string.Concat(((float)fileSizeInKB / BytesPerKb).ToString(), " MB") : string.Concat(fileSizeInKB.ToString(), " KB");
+                                this.lblMessage.Text = string.Format(
+                                    CultureInfo.CurrentCulture, ApplicationResources.SuccessfulUpload, fileSizeMessage, duration.TotalSeconds);
+                                break;
+                            case Constants.UploadCompleteReason.ErrorOccurred:
+                                this.lblMessage.Text = string.Format(CultureInfo.CurrentCulture, ApplicationResources.UploadFailed, e.ErrorMessage);
+                                break;
+                            case Constants.UploadCompleteReason.UserCancelled:
+                                this.lblMessage.Text = string.Format(CultureInfo.CurrentCulture, ApplicationResources.UploadCancelled);
+                                break;
+                            default:
+                                this.lblMessage.Text = string.Format(CultureInfo.CurrentCulture, ApplicationResources.UnknownErrorOccured);
+                                break;
+                        }
+
+                        this.userFile = null;
                     }
 
                     this.btnUpload.Content = UploadButtonText;
+                    this.txtFileName.Text = string.Empty;
                     this.prgUpload.IsIndeterminate = false;
                 });
         }

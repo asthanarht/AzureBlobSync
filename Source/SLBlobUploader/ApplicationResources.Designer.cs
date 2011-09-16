@@ -88,6 +88,24 @@ namespace SLBlobUploader.Control {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The signature generated for this upload session has expired. Reload the page to generate a fresh signature..
+        /// </summary>
+        internal static string SASExpired {
+            get {
+                return ResourceManager.GetString("SASExpired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file could not be uploaded because the signature generated for this session has expired. Reload the page and try uploading the file again..
+        /// </summary>
+        internal static string SASExpiredInUploadSession {
+            get {
+                return ResourceManager.GetString("SASExpiredInUploadSession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File of size {0} has been uploaded successfully in {1} seconds..
         /// </summary>
         internal static string SuccessfulUpload {
@@ -106,7 +124,7 @@ namespace SLBlobUploader.Control {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File upload has been terminated..
+        ///   Looks up a localized string similar to File upload has been cancelled..
         /// </summary>
         internal static string UploadCancelled {
             get {

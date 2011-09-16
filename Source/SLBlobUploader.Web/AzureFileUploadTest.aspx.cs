@@ -28,12 +28,26 @@ namespace BlobUploader.Web
         private string containerUrl;
 
         /// <summary>
+        /// Time period for which shared access signature is valid.
+        /// </summary>
+        private int timeOutMinutes = 1;
+
+        /// <summary>
         /// Gets the SAS URL.
         /// </summary>
         /// <returns>SAS URL of target container</returns>
         public string GetSASUrl()
         {
             return this.containerUrl;
+        }
+
+        /// <summary>
+        /// Get the number of seconds for which the signature is valid.
+        /// </summary>
+        /// <returns>Time out interval in seconds</returns>
+        public string GetTimeOutSeconds()
+        {
+            return TimeSpan.FromMinutes(this.timeOutMinutes).TotalSeconds.ToString();
         }
 
         /// <summary>
@@ -53,7 +67,7 @@ namespace BlobUploader.Web
                 var sas = container.GetSharedAccessSignature(new SharedAccessPolicy()
                 {
                     Permissions = SharedAccessPermissions.Write,
-                    SharedAccessExpiryTime = DateTime.UtcNow + TimeSpan.FromMinutes(10)
+                    SharedAccessExpiryTime = DateTime.UtcNow + TimeSpan.FromMinutes(this.timeOutMinutes)
                 });
 
                 this.containerUrl = new UriBuilder(container.Uri) { Query = sas.TrimStart('?') }.Uri.AbsoluteUri;

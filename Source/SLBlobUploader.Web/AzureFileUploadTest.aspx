@@ -6,30 +6,33 @@
 <head id="Head1" runat="server">
     <title>SilverlightBlobUploader</title>
     <style type="text/css">
-    html, body {
-	    height: 100%;
-	    overflow: auto;
-    }
-    body {
-	    padding: 0;
-	    margin: 0;
-    }
-   
+        html, body
+        {
+            height: 100%;
+            overflow: auto;
+        }
+        body
+        {
+            padding: 0;
+            margin: 0;
+        }
+        
         .divHeader
         {
-            background-color:#003366;
-            height:50px;
-            width:100%;
-            color:White;
-            font-family:Microsoft Sans Serif;
-            font-size:22px;
-            font-weight:bold;
-            text-align:center;
+            background-color: #003366;
+            height: 50px;
+            width: 100%;
+            color: White;
+            font-family: Microsoft Sans Serif;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
         }
-    #silverlightControlHost {
-	    height: 100%;
-	    text-align:center;
-    }
+        #silverlightControlHost
+        {
+            height: 100%;
+            text-align: center;
+        }
     </style>
     <script type="text/javascript" src="Silverlight.js"></script>
     <script type="text/javascript">
@@ -70,16 +73,15 @@
     </script>
 </head>
 <body>
-
     <form id="form1" runat="server">
     <div>
-    <table class="divHeader">
+        <table class="divHeader">
             <tr>
                 <td class="style12">
-                   Silverlight Azure Blob Upload</td>
-                
+                    Silverlight Azure Blob Upload
+                </td>
             </tr>
-            </table>
+        </table>
     </div>
     <div>
         <div id="silverlightControlHost">
@@ -90,7 +92,7 @@
                 <param name="background" value="white" />
                 <param name="minRuntimeVersion" value="3.0.40818.0" />
                 <param name="autoUpgrade" value="true" />
-                <param name="initParams" value="sasUrl=<%=GetSASUrl()%>" />
+                <param name="initParams" value="sasUrl=<%=GetSASUrl()%>, timeOutInterval= <%=GetTimeOutSeconds()%>" />
                 <a href="http://go.microsoft.com/fwlink/?LinkID=149156&v=3.0.40818.0" style="text-decoration: none">
                     <img src="http://go.microsoft.com/fwlink/?LinkId=161376" alt="Get Microsoft Silverlight"
                         style="border-style: none" />

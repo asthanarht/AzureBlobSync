@@ -9,6 +9,16 @@
     public partial class App : Application
     {
         /// <summary>
+        /// Parameter identifier for SAS URL passed from aspx page.
+        /// </summary>
+        private const string SasUrlParameter = "sasUrl";
+
+        /// <summary>
+        /// Parameter identifier for SAS timeout interval passed from aspx page.
+        /// </summary>
+        private const string TimeoutIntervalParameter = "timeOutInterval";
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="App"/> class.
         /// </summary>
         public App()
@@ -27,7 +37,13 @@
         /// <param name="e">The <see cref="System.Windows.StartupEventArgs"/> instance containing the event data.</param>
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            this.RootVisual = new MainPage(e.InitParams["sasUrl"]);
+            string sasUrl = e.InitParams[SasUrlParameter];
+            string timeOutInterval = e.InitParams[TimeoutIntervalParameter];
+
+            if (!string.IsNullOrWhiteSpace(sasUrl) && !string.IsNullOrWhiteSpace(timeOutInterval))
+            {
+                this.RootVisual = new MainPage(sasUrl, timeOutInterval);
+            }
         }
 
         /// <summary>
