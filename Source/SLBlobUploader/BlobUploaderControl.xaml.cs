@@ -85,7 +85,10 @@ namespace SLBlobUploader.Control
                 this.txtFileName.Text = string.Empty;
             });
             sasExpiryTimer.Start();
+
             this.InitializeComponent();
+            this.btnBrowse.IsEnabled = true;
+            this.btnUpload.IsEnabled = false;
         }
 
         /// <summary>
@@ -116,12 +119,14 @@ namespace SLBlobUploader.Control
                 if ((this.userFile.FileStream.Length / BytesPerKb) <= MaxFileSizeKb && this.userFile.FileStream.Length > 0)
                 {
                     this.files.Add(this.userFile);
+                    this.btnUpload.IsEnabled = true;
                 }
                 else
                 {
                     this.lblMessage.Text = this.userFile.FileStream.Length > 0 ?
                         string.Format(CultureInfo.CurrentCulture, ApplicationResources.IllegalMaxFileSize, MaxFileSizeKb / BytesPerKb) : string.Format(ApplicationResources.IllegalMinFileSize, MaxFileSizeKb / 1024);
                     this.lblMessage.Visibility = System.Windows.Visibility.Visible;
+                    this.btnUpload.IsEnabled = false;
                 }
             }
         }
@@ -163,6 +168,8 @@ namespace SLBlobUploader.Control
                     this.btnUpload.Content = UploadButtonText;
                     this.txtFileName.Text = string.Empty;
                     this.prgUpload.IsIndeterminate = false;
+                    this.btnUpload.IsEnabled = false;
+                    this.btnBrowse.IsEnabled = true;
                 });
         }
 
@@ -178,6 +185,8 @@ namespace SLBlobUploader.Control
             {
                 callerButton.Content = CancelButtonText;
                 this.prgUpload.IsIndeterminate = true;
+                this.btnUpload.IsEnabled = true;
+                this.btnBrowse.IsEnabled = false;
                 this.operationStartTime = DateTime.Now;
                 this.lblMessage.Text = string.Empty;
                 if (this.files != null)
@@ -192,11 +201,15 @@ namespace SLBlobUploader.Control
                     this.lblMessage.Text = ApplicationResources.NoFileSelected;
                     this.prgUpload.IsIndeterminate = false;
                     this.btnUpload.Content = UploadButtonText;
+                    this.btnUpload.IsEnabled = false;
+                    this.btnBrowse.IsEnabled = true;
                 }
             }
             else
             {
                 this.userFile.CancelUpload();
+                this.btnUpload.IsEnabled = false;
+                this.btnBrowse.IsEnabled = true;
             }
 
             this.files = null;

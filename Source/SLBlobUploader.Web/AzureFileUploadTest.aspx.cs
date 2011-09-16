@@ -30,7 +30,7 @@ namespace BlobUploader.Web
         /// <summary>
         /// Time period for which shared access signature is valid.
         /// </summary>
-        private int timeOutMinutes = 1;
+        private int timeOutMinutes = 10;
 
         /// <summary>
         /// Gets the SAS URL.
