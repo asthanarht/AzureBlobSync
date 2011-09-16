@@ -127,12 +127,7 @@
     <value>Please select a file to upload.</value>
   </data>
   <data name="SASExpired" xml:space="preserve">
-    <value>The signature generated for this upload session has expired. Reload the page to generate a fresh signature.</value>
-    <comment>SAS expired when no upload was being carried out.</comment>
-  </data>
-  <data name="SASExpiredInUploadSession" xml:space="preserve">
-    <value>The file could not be uploaded because the signature generated for this session has expired. Reload the page and try uploading the file again.</value>
-    <comment>SAS expired in mid of an upload session.</comment>
+    <value>Your upload session has expired. Reload the page to create a fresh upload session and upload the file again.</value>
   </data>
   <data name="SuccessfulUpload" xml:space="preserve">
     <value>File of size {0} has been uploaded successfully in {1} seconds.</value>

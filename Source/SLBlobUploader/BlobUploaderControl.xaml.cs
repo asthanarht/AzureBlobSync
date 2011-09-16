@@ -45,6 +45,11 @@ namespace SLBlobUploader.Control
         private string sasUrl = string.Empty;
 
         /// <summary>
+        /// Value indicates whether SAS URL has expired
+        /// </summary>
+        private bool sasExpired = false;
+
+        /// <summary>
         /// Timer to time operation.
         /// </summary>
         private DateTime operationStartTime;
@@ -66,19 +71,13 @@ namespace SLBlobUploader.Control
             sasExpiryTimer.Interval = new TimeSpan(0, 0, Convert.ToInt32(timeOutSeconds));
             sasExpiryTimer.Tick += new EventHandler((o, e) =>
             {
-                if (this.files != null && this.files.Count > 0)
+                this.sasExpired = true;
+                if (this.userFile != null)
                 {
                     this.userFile.CancelUpload();
-                    this.Dispatcher.BeginInvoke(() =>
-                    {
-                        this.lblMessage.Text = ApplicationResources.SASExpiredInUploadSession;
-                    });
-                }
-                else
-                {
-                    this.lblMessage.Text = ApplicationResources.SASExpired;
                 }
 
+                this.lblMessage.Text = ApplicationResources.SASExpired;
                 this.btnBrowse.IsEnabled = false;
                 this.btnUpload.IsEnabled = false;
                 this.prgUpload.IsIndeterminate = false;
@@ -155,7 +154,11 @@ namespace SLBlobUploader.Control
                                 this.lblMessage.Text = string.Format(CultureInfo.CurrentCulture, ApplicationResources.UploadFailed, e.ErrorMessage);
                                 break;
                             case Constants.UploadCompleteReason.UserCancelled:
-                                this.lblMessage.Text = string.Format(CultureInfo.CurrentCulture, ApplicationResources.UploadCancelled);
+                                if (!sasExpired)
+                                {
+                                    this.lblMessage.Text = string.Format(CultureInfo.CurrentCulture, ApplicationResources.UploadCancelled);
+                                }
+
                                 break;
                             default:
                                 this.lblMessage.Text = string.Format(CultureInfo.CurrentCulture, ApplicationResources.UnknownErrorOccured);

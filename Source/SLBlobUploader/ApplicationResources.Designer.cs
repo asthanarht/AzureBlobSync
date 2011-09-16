@@ -88,20 +88,11 @@ namespace SLBlobUploader.Control {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The signature generated for this upload session has expired. Reload the page to generate a fresh signature..
+        ///   Looks up a localized string similar to Your upload session has expired. Reload the page to create a fresh upload session and upload the file again..
         /// </summary>
         internal static string SASExpired {
             get {
                 return ResourceManager.GetString("SASExpired", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The file could not be uploaded because the signature generated for this session has expired. Reload the page and try uploading the file again..
-        /// </summary>
-        internal static string SASExpiredInUploadSession {
-            get {
-                return ResourceManager.GetString("SASExpiredInUploadSession", resourceCulture);
             }
         }
         
