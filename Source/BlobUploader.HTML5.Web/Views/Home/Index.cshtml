@@ -1,0 +1,58 @@
+﻿@model BlobUploader.Html5.Web.Models.FileUploadModel
+@{
+    ViewBag.Title = "Index";
+}
+<form id="form1" runat="server">
+<div>
+    <table class="divHeader">
+        <tr>
+            <td class="style12">
+                HTML5 Azure Blob Upload
+            </td>
+        </tr>
+    </table>
+</div>
+<div align="center" style="vertical-align: middle;">
+    <br />
+    <div id="silverlightControlHost" style="border: 3px solid #293955; padding: 7px 7px 7px 7px;
+        width: 400px; height: 140px;">
+        <div style="background: #293955; height: 100%; width: 100%; vertical-align: middle">
+            <table width="100%" cellpadding="2" cellspacing="5">
+                <tr align="left">
+                    <td colspan="2">
+                        <span style="font-size: smaller; font-family: Arial; color: White">Please select a file
+                            to upload</span>
+                    </td>
+                </tr>
+                <tr align="left">
+                    <td valign="top">
+                        <input type="file" id="FileInput" multiple="false" style="height: 24px; width: 100%" />
+                    </td>
+                    <td align="right">
+                        <input type="button" id="upload" name="Upload" value="Upload" onclick="startUpload('FileInput', 1048576, 'uploadProgress');return false;"
+                            class="btn" onmouseover="this.className='btn btnhov'" onmouseout="this.className='btn'" />
+                        <input type="button" id="cancel" name="Cancel" value="Cancel" class="btn" onmouseover="this.className='btn btnhov'"
+                            onmouseout="this.className='btn'" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        @if (@Model != null && @Model.IsUploadCompleted)
+                        {
+                            <progress id="uploadProgress" style="width: 100%; height: 10px" />                                                
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        @if (@Model != null)
+                        {
+                            <span style="font-size: smaller; font-family: Arial; color: White">@Model.UploadStatusMessage</span>
+                        }
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</form>
