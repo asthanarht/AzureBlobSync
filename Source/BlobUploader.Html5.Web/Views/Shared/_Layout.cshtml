@@ -47,67 +47,7 @@
             border-color: Orange;
         }
     </style>
-    <script type="text/javascript">
-        $(function () {
-            //is the file api available in this browser
-            //only override *if* available.
-            if (new XMLHttpRequest().upload) {
-                $("#upload-files").click(function () {
-                    //upload files using the api
-                    //The files property is available from the
-                    //input DOM object
-                    upload_files($("#files-to-upload")[0].files);
-                    return false;
-                });
-            }
-        });
-
-        //accepts the input.files parameter
-        function upload_files(filelist) {
-            if (typeof filelist !== "undefined") {
-                for (var i = 0, l = filelist.length; i < l; i++) {
-                    upload_file(filelist[i]);
-                }
-            }
-        }
-
-        //each file upload produces a unique POST
-        function upload_file(file) {
-            xhr = new XMLHttpRequest();
-
-            xhr.upload.addEventListener("progress", function (evt) {
-                if (evt.lengthComputable) {
-                    //update the progress bar
-                    $(".progress-bar").css({
-                        width: (evt.loaded / evt.total) * 100 + "%"
-                    });
-                }
-            }, false);
-
-            // File uploaded
-            xhr.addEventListener("load", function () {
-                $(".progress-bar").html("Uploaded");
-                $(".progress-bar").css({ backgroundColor: "#fff" });
-            }, false);
-
-            xhr.open("post", "home/uploadfile", true);
-
-            // Set appropriate headers
-            // We're going to use these in the UploadFile method
-            // To determine what is being uploaded.
-            xhr.setRequestHeader("Content-Type", "multipart/form-data");
-            xhr.setRequestHeader("X-File-Name", file.fileName);
-            xhr.setRequestHeader("X-File-Size", file.fileSize);
-            xhr.setRequestHeader("X-File-Type", file.type);
-
-            // Send the file
-            xhr.send(file);
-        }
-
-    </script>
     <script src="@Url.Content("~/Scripts/jquery-1.5.1.js")" type="text/javascript"></script>
-   @* <script src="@Url.Content("~/Scripts/jquery.unobtrusive-ajax.js")" type="text/javascript"></script>
-    <script src="@Url.Content("~/Scripts/MicrosoftAjax.js")" type="text/javascript"></script>*@
     <script type="text/javascript" src="@Url.Content("~/Scripts/BlockBlobUpload.js")"></script>
 </head>
 <body>

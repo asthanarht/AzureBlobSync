@@ -25,26 +25,35 @@ namespace BlobUploader.Html5.Web.Controllers
         /// Container where to upload files
         /// </summary>
         private const string ContainerName = "uploads";
+        private int BytesPerKb = 1024;
 
         [HttpGet]
         public ActionResult Index()
         {
-            Session.Clear();
-            var storageAccount = CloudStorageAccount.Parse(ConfigurationManager.AppSettings[ConfigurationSectionKey]);
-            var container = storageAccount.CreateCloudBlobClient().GetContainerReference(ContainerName);
-            container.CreateIfNotExist();
-            Session["Container"] = container;
-            return View();
+            //Session.Clear();
+            return View(new FileUploadModel()
+            {
+                IsUploadCompleted = false,
+                UploadStatusMessage = string.Empty
+            });
         }
 
         [HttpPost]
         public ActionResult PrepareMetaData(int blocksCount, string fileName, long fileSize)
         {
-            Session["BlockCount"] = blocksCount;
-            Session["FileName"] = fileName;
-            Session["BlockBlob"] = ((CloudBlobContainer)Session["Container"]).GetBlockBlobReference(fileName);
-            Session["StartTime"] = DateTime.Now;
-            Session["BlockCounter"] = 0;
+            var container = (CloudStorageAccount.Parse(ConfigurationManager.AppSettings[ConfigurationSectionKey])).CreateCloudBlobClient().GetContainerReference(ContainerName);
+            container.CreateIfNotExist();
+            Session.Add("FileClientAttributes", new FileUploadModel()
+            {
+                BlockCount = blocksCount,
+                FileName = fileName,
+                FileSize = fileSize,
+                BlockBlob = container.GetBlockBlobReference(fileName),
+                StartTime = DateTime.Now,
+                BlockCounter = 0,
+                IsUploadCompleted = false,
+                UploadStatusMessage = string.Empty
+            });
             return Json(true);
         }
 
@@ -54,41 +63,38 @@ namespace BlobUploader.Html5.Web.Controllers
         {
             byte[] chunk = new byte[Request.InputStream.Length];
             Request.InputStream.Read(chunk, 0, Convert.ToInt32(Request.InputStream.Length));
-            if (Session["BlockBlob"] != null)
+            if (Session["FileClientAttributes"] != null)
             {
+                var model = (FileUploadModel)Session["FileClientAttributes"];
                 using (var chunkStream = new MemoryStream(chunk))
                 {
                     var blockId = Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", Convert.ToInt32(Request.Headers["X-File-Name"]))));
                     try
                     {
-                        ((CloudBlockBlob)Session["BlockBlob"]).PutBlock(blockId, chunkStream, null, new BlobRequestOptions() { RetryPolicy = RetryPolicies.Retry(3, TimeSpan.FromSeconds(10)) });
+                        model.BlockBlob.PutBlock(blockId, chunkStream, null, new BlobRequestOptions() { RetryPolicy = RetryPolicies.Retry(3, TimeSpan.FromSeconds(10)) });
                     }
                     catch (StorageException e)
                     {
-                        FileUploadModel model = new FileUploadModel()
-                        {
-                            IsUploadCompleted = true,
-                            UploadStatusMessage = string.Format("Failed to upload file because " + e.Message)
-                        };
                         Session.Clear();
+                        model.IsUploadCompleted = true;
+                        model.UploadStatusMessage = string.Format("Failed to upload file because " + e.Message);
                         return View("Index", model);
                     }
 
-                    Session["BlockCounter"] = (int)Session["BlockCounter"] + 1;
+                    ++model.BlockCounter;
                 }
 
-                if (((int)Session["BlockCounter"]) == ((int)Session["BlockCount"]))
+                if (model.BlockCounter == model.BlockCount)
                 {
-                    var blockList = Enumerable.Range(1, ((int)Session["BlockCount"])).ToList<int>().ConvertAll<string>(rangeElement => Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", rangeElement))));
-                    ((CloudBlockBlob)Session["BlockBlob"]).PutBlockList(blockList);
-                    var duration = DateTime.Now - ((DateTime)Session["StartTime"]);
-                    FileUploadModel model = new FileUploadModel()
-                    {
-                        IsUploadCompleted = true,
-                        UploadStatusMessage = string.Format("{0} has been uploaded in {1}", Session["FileName"].ToString(), duration.TotalSeconds)
-                    };
+                    var blockList = Enumerable.Range(1, (int)model.BlockCount).ToList<int>().ConvertAll<string>(rangeElement => Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", rangeElement))));
+                    model.BlockBlob.PutBlockList(blockList);
+                    var duration = DateTime.Now - model.StartTime;
+                    model.IsUploadCompleted = true;
+                    long fileSizeInKb = model.FileSize / BytesPerKb;
+                    string fileSizeMessage = fileSizeInKb > BytesPerKb ? string.Concat((fileSizeInKb / BytesPerKb).ToString(), " MB") : string.Concat(fileSizeInKb.ToString(), " KB");
+                    model.UploadStatusMessage = string.Format("File of size {0} has been uploaded in {1} seconds", fileSizeMessage, duration.TotalSeconds);
                     Session.Clear();
-                    return View("Index", model);
+                    return View(model);
                 }
             }
 

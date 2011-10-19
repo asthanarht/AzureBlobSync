@@ -1,6 +1,6 @@
 ﻿@model BlobUploader.Html5.Web.Models.FileUploadModel
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "HTML5 Blob Upload Control";
 }
 <form id="form1" runat="server">
 <div>
@@ -29,15 +29,19 @@
                         <input type="file" id="FileInput" multiple="false" style="height: 24px; width: 100%" />
                     </td>
                     <td align="right">
-                        <input type="button" id="upload" name="Upload" value="Upload" onclick="startUpload('FileInput', 1048576, 'uploadProgress');return false;"
-                            class="btn" onmouseover="this.className='btn btnhov'" onmouseout="this.className='btn'" />
-                        <input type="button" id="cancel" name="Cancel" value="Cancel" class="btn" onmouseover="this.className='btn btnhov'"
-                            onmouseout="this.className='btn'" />
+                        @using (Html.BeginForm())
+                        {
+                            <input type="button" id="upload" name="Upload" value="Upload" onclick="startUpload('FileInput', 1048576, 'uploadProgress');return false;"
+                                class="btn" onmouseover="this.className='btn btnhov'" onmouseout="this.className='btn'"
+                                type="submit" />
+                            <input type="button" id="cancel" name="Cancel" value="Cancel" class="btn" onmouseover="this.className='btn btnhov'"
+                                onmouseout="this.className='btn'" />
+                        }
                     </td>
                 </tr>
                 <tr>
                     <td colspan="2">
-                        @if (@Model != null && @Model.IsUploadCompleted)
+                        @if (!@Model.IsUploadCompleted)
                         {
                             <progress id="uploadProgress" style="width: 100%; height: 10px" />                                                
                         }
@@ -45,10 +49,7 @@
                 </tr>
                 <tr>
                     <td colspan="2">
-                        @if (@Model != null)
-                        {
-                            <span style="font-size: smaller; font-family: Arial; color: White">@Model.UploadStatusMessage</span>
-                        }
+                        <span style="font-size: smaller; font-family: Arial; color: White">@Html.Label(@Model.UploadStatusMessage)</span>
                     </td>
                 </tr>
             </table>
