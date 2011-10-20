@@ -8,64 +8,69 @@ namespace BlobUploader.Html5.Web.Controllers
     using System.Linq;
     using System.Text;
     using System.Web.Mvc;
+    using BlobUploader.Html5.Web.Infrastructure;
+    using BlobUploader.Html5.Web.Models;
+    using BlobUploader.Html5.Web.Properties;
     using Microsoft.WindowsAzure;
     using Microsoft.WindowsAzure.StorageClient;
-    using System.Collections.Generic;
-    using BlobUploader.Html5.Web.Models;
-    using System.Web;
 
+    /// <summary>
+    /// Controller for BlobUpload control.
+    /// </summary>
     public class HomeController : Controller
     {
         /// <summary>
-        /// Configuration section key containing connection string.
+        /// Default Action for Home Controller.
         /// </summary>
-        private const string ConfigurationSectionKey = "StorageAccountConfiguration";
-
-        /// <summary>
-        /// Container where to upload files
-        /// </summary>
-        private const string ContainerName = "uploads";
-        private int BytesPerKb = 1024;
-
+        /// <returns>Default view for Home Controller</returns>
         [HttpGet]
         public ActionResult Index()
         {
-            //Session.Clear();
-            return View(new FileUploadModel()
-            {
-                IsUploadCompleted = false,
-                UploadStatusMessage = string.Empty
-            });
+            return View();
         }
 
+        /// <summary>
+        /// Prepares the meta data for file to be uploaded.
+        /// </summary>
+        /// <param name="blocksCount">Count of blocks to be uploaded.</param>
+        /// <param name="fileName">Name of the file.</param>
+        /// <param name="fileSize">Size of the file.</param>
+        /// <returns>True in JSON format to the view.</returns>
         [HttpPost]
         public ActionResult PrepareMetaData(int blocksCount, string fileName, long fileSize)
         {
-            var container = (CloudStorageAccount.Parse(ConfigurationManager.AppSettings[ConfigurationSectionKey])).CreateCloudBlobClient().GetContainerReference(ContainerName);
+            var container = CloudStorageAccount.Parse(ConfigurationManager.AppSettings[Constants.ConfigurationSectionKey]).CreateCloudBlobClient().GetContainerReference(Constants.ContainerName);
             container.CreateIfNotExist();
-            Session.Add("FileClientAttributes", new FileUploadModel()
-            {
-                BlockCount = blocksCount,
-                FileName = fileName,
-                FileSize = fileSize,
-                BlockBlob = container.GetBlockBlobReference(fileName),
-                StartTime = DateTime.Now,
-                BlockCounter = 0,
-                IsUploadCompleted = false,
-                UploadStatusMessage = string.Empty
-            });
+            var fileToUpload = new FileUploadModel()
+                {
+                    BlockCount = blocksCount,
+                    FileName = fileName,
+                    FileSize = fileSize,
+                    BlockBlob = container.GetBlockBlobReference(fileName),
+                    StartTime = DateTime.Now,
+                    BlockCounter = 0,
+                    IsUploadCompleted = false,
+                    UploadStatusMessage = string.Empty
+                };
+            Session.Add(Constants.FileAttributesSession, fileToUpload);
             return Json(true);
         }
 
+        /// <summary>
+        /// Uploads each block of file to be uploaded and puts block list in the end.
+        /// </summary>
+        /// <returns>
+        /// JSON message specifying status of operation.
+        /// </returns>
         [HttpPost]
         [ValidateInput(false)]
         public ActionResult UploadBlock()
         {
             byte[] chunk = new byte[Request.InputStream.Length];
             Request.InputStream.Read(chunk, 0, Convert.ToInt32(Request.InputStream.Length));
-            if (Session["FileClientAttributes"] != null)
+            if (Session[Constants.FileAttributesSession] != null)
             {
-                var model = (FileUploadModel)Session["FileClientAttributes"];
+                var model = (FileUploadModel)Session[Constants.FileAttributesSession];
                 using (var chunkStream = new MemoryStream(chunk))
                 {
                     var blockId = Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", Convert.ToInt32(Request.Files.Keys[0]))));
@@ -77,7 +82,7 @@ namespace BlobUploader.Html5.Web.Controllers
                     {
                         Session.Clear();
                         model.IsUploadCompleted = true;
-                        model.UploadStatusMessage = string.Format("Failed to upload file because " + e.Message);
+                        model.UploadStatusMessage = string.Format(Resources.FailedToUploadFileMessage, e.Message);
                         return Json(new { error = true, isLastBlock = false, message = model.UploadStatusMessage });
                     }
 
@@ -90,9 +95,11 @@ namespace BlobUploader.Html5.Web.Controllers
                     model.BlockBlob.PutBlockList(blockList);
                     var duration = DateTime.Now - model.StartTime;
                     model.IsUploadCompleted = true;
-                    long fileSizeInKb = model.FileSize / BytesPerKb;
-                    string fileSizeMessage = fileSizeInKb > BytesPerKb ? string.Concat((fileSizeInKb / BytesPerKb).ToString(), " MB") : string.Concat(fileSizeInKb.ToString(), " KB");
-                    model.UploadStatusMessage = string.Format("File of size {0} has been uploaded in {1} seconds", fileSizeMessage, duration.TotalSeconds);
+                    float fileSizeInKb = model.FileSize / Constants.BytesPerKb;
+                    string fileSizeMessage = fileSizeInKb > Constants.BytesPerKb ?
+                        string.Concat((fileSizeInKb / Constants.BytesPerKb).ToString(), " MB") :
+                        string.Concat(fileSizeInKb.ToString(), " KB");
+                    model.UploadStatusMessage = string.Format(Resources.FileUploadedMessage, fileSizeMessage, duration.TotalSeconds);
                     Session.Clear();
                     return Json(new { error = false, isLastBlock = true, message = model.UploadStatusMessage });
                 }
