@@ -68,7 +68,7 @@ namespace BlobUploader.Html5.Web.Controllers
                 var model = (FileUploadModel)Session["FileClientAttributes"];
                 using (var chunkStream = new MemoryStream(chunk))
                 {
-                    var blockId = Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", Convert.ToInt32(Request.Headers["X-File-Name"]))));
+                    var blockId = Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", Convert.ToInt32(Request.Files.Keys[0]))));
                     try
                     {
                         model.BlockBlob.PutBlock(blockId, chunkStream, null, new BlobRequestOptions() { RetryPolicy = RetryPolicies.Retry(3, TimeSpan.FromSeconds(10)) });
@@ -78,7 +78,7 @@ namespace BlobUploader.Html5.Web.Controllers
                         Session.Clear();
                         model.IsUploadCompleted = true;
                         model.UploadStatusMessage = string.Format("Failed to upload file because " + e.Message);
-                        return View("Index", model);
+                        return Json(new { error = true, isLastBlock = false, message = model.UploadStatusMessage });
                     }
 
                     ++model.BlockCounter;
@@ -94,11 +94,11 @@ namespace BlobUploader.Html5.Web.Controllers
                     string fileSizeMessage = fileSizeInKb > BytesPerKb ? string.Concat((fileSizeInKb / BytesPerKb).ToString(), " MB") : string.Concat(fileSizeInKb.ToString(), " KB");
                     model.UploadStatusMessage = string.Format("File of size {0} has been uploaded in {1} seconds", fileSizeMessage, duration.TotalSeconds);
                     Session.Clear();
-                    return View(model);
+                    return Json(new { error = false, isLastBlock = true, message = model.UploadStatusMessage });
                 }
             }
 
-            return Json(true);
+            return Json(new { error = false, isLastBlock = false, message = string.Empty });
         }
     }
 }
