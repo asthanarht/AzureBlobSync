@@ -1,6 +1,8 @@
-﻿
+﻿var blockCounter = 0;
+var totalNumberOfBlocks = 0;
+var message = '';
+
 function startUpload(fileElementId, blockLength, uploadProgressElement, statusLabel) {
-    var totalNumberOfBlocks = 0;
     var file = document.getElementById(fileElementId).files[0];
     var statusLabel = document.getElementById(statusLabel);
     var progressElement = document.getElementById(uploadProgressElement);
@@ -10,7 +12,9 @@ function startUpload(fileElementId, blockLength, uploadProgressElement, statusLa
         return;
     }
 
-    totalNumberOfBlocks = Math.ceil(file.size / blockLength);
+    this.totalNumberOfBlocks = Math.ceil(file.size / blockLength);
+    this.blockCounter = 0;
+    this.message = '';
     progressElement.removeAttribute('hidden');
     $.ajax({
         type: "POST",
@@ -43,8 +47,13 @@ function startUpload(fileElementId, blockLength, uploadProgressElement, statusLa
                         return false;
                     },
                     success: function (notice) {
+                        blockCounter += 1;
                         if (notice.error || notice.isLastBlock) {
-                            statusLabel.innerHTML = notice.message;
+                            this.message = notice.message;
+                        }
+
+                        if (notice.error || blockCounter == totalNumberOfBlocks) {
+                            statusLabel.innerHTML = this.message;
                             progressElement.setAttribute('hidden', 'hidden');
                             return false;
                         }
