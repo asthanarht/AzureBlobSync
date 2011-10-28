@@ -1,4 +1,11 @@
-﻿using System.Reflection;
+﻿//----------------------------------------------------------------------------------------------------------------------------
+// <copyright file="AssemblyInfo.cs" company="Microsoft Corporation">
+//  Copyright 2011 Microsoft Corporation
+// </copyright>
+// Licensed under the MICROSOFT LIMITED PUBLIC LICENSE version 1.1 (the "License"); 
+// You may not use this file except in compliance with the License. 
+//---------------------------------------------------------------------------------------------------------------------------
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

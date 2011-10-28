@@ -1,4 +1,10 @@
-﻿
+﻿//----------------------------------------------------------------------------------------------------------------------------
+// <copyright file="AzureFileUploadTest.aspx.cs" company="Microsoft Corporation">
+//  Copyright 2011 Microsoft Corporation
+// </copyright>
+// Licensed under the MICROSOFT LIMITED PUBLIC LICENSE version 1.1 (the "License"); 
+// You may not use this file except in compliance with the License. 
+//---------------------------------------------------------------------------------------------------------------------------
 namespace BlobUploader.Web
 {
     using System;
@@ -70,7 +76,10 @@ namespace BlobUploader.Web
                     SharedAccessExpiryTime = DateTime.UtcNow + TimeSpan.FromMinutes(this.timeOutMinutes)
                 });
 
-                this.containerUrl = new UriBuilder(container.Uri) { Query = sas.TrimStart('?') }.Uri.AbsoluteUri;
+                this.containerUrl = (new UriBuilder(container.Uri)
+                {
+                    Query = sas.TrimStart('?')
+                }).Uri.AbsoluteUri;
             }
         }
 

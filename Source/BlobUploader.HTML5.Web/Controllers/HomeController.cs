@@ -1,4 +1,10 @@
-﻿
+﻿//----------------------------------------------------------------------------------------------------------------------------
+// <copyright file="HomeController.cs" company="Microsoft Corporation">
+//  Copyright 2011 Microsoft Corporation
+// </copyright>
+// Licensed under the MICROSOFT LIMITED PUBLIC LICENSE version 1.1 (the "License"); 
+// You may not use this file except in compliance with the License. 
+//---------------------------------------------------------------------------------------------------------------------------
 namespace BlobUploader.Html5.Web.Controllers
 {
     using System;
@@ -48,7 +54,6 @@ namespace BlobUploader.Html5.Web.Controllers
                     FileSize = fileSize,
                     BlockBlob = container.GetBlockBlobReference(fileName),
                     StartTime = DateTime.Now,
-                    BlockCounter = 0,
                     IsUploadCompleted = false,
                     UploadStatusMessage = string.Empty
                 };
@@ -59,12 +64,13 @@ namespace BlobUploader.Html5.Web.Controllers
         /// <summary>
         /// Uploads each block of file to be uploaded and puts block list in the end.
         /// </summary>
+        /// <param name="id">The id of block to upload.</param>
         /// <returns>
         /// JSON message specifying status of operation.
         /// </returns>
         [HttpPost]
         [ValidateInput(false)]
-        public ActionResult UploadBlock()
+        public ActionResult UploadBlock(int id)
         {
             byte[] chunk = new byte[Request.InputStream.Length];
             Request.InputStream.Read(chunk, 0, Convert.ToInt32(Request.InputStream.Length));
@@ -73,7 +79,7 @@ namespace BlobUploader.Html5.Web.Controllers
                 var model = (FileUploadModel)Session[Constants.FileAttributesSession];
                 using (var chunkStream = new MemoryStream(chunk))
                 {
-                    var blockId = Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", Convert.ToInt32(Request.Files.Keys[0]))));
+                    var blockId = Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", id)));
                     try
                     {
                         model.BlockBlob.PutBlock(blockId, chunkStream, null, new BlobRequestOptions() { RetryPolicy = RetryPolicies.Retry(3, TimeSpan.FromSeconds(10)) });
@@ -85,13 +91,11 @@ namespace BlobUploader.Html5.Web.Controllers
                         model.UploadStatusMessage = string.Format(Resources.FailedToUploadFileMessage, e.Message);
                         return Json(new { error = true, isLastBlock = false, message = model.UploadStatusMessage });
                     }
-
-                    ++model.BlockCounter;
                 }
 
-                if (model.BlockCounter == model.BlockCount)
+                if (id == model.BlockCount)
                 {
-                    var blockList = Enumerable.Range(1, (int)model.BlockCount).ToList<int>().ConvertAll<string>(rangeElement => Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", rangeElement))));
+                    var blockList = Enumerable.Range(1, (int)model.BlockCount).ToList<int>().ConvertAll(rangeElement => Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", rangeElement))));
                     model.BlockBlob.PutBlockList(blockList);
                     var duration = DateTime.Now - model.StartTime;
                     model.IsUploadCompleted = true;

@@ -1,4 +1,10 @@
-﻿
+﻿//----------------------------------------------------------------------------------------------------------------------------
+// <copyright file="FileUploadModel.cs" company="Microsoft Corporation">
+//  Copyright 2011 Microsoft Corporation
+// </copyright>
+// Licensed under the MICROSOFT LIMITED PUBLIC LICENSE version 1.1 (the "License"); 
+// You may not use this file except in compliance with the License. 
+//---------------------------------------------------------------------------------------------------------------------------
 namespace BlobUploader.Html5.Web.Models
 {
     using System;
@@ -40,12 +46,6 @@ namespace BlobUploader.Html5.Web.Models
         public DateTime StartTime { get; set; }
 
         /// <summary>
-        /// Gets or sets the block counter.
-        /// </summary>
-        /// <value>The block counter.</value>
-        public long BlockCounter { get; set; }
-
-        /// <summary>
         /// Gets or sets the upload status message.
         /// </summary>
         /// <value>The upload status message.</value>
@@ -55,7 +55,7 @@ namespace BlobUploader.Html5.Web.Models
         /// Gets or sets a value indicating whether upload of this instance is complete.
         /// </summary>
         /// <value>
-        /// 	true if upload of this instance is complete; otherwise, false.
+        /// True if upload of this instance is complete; otherwise, false.
         /// </value>
         public bool IsUploadCompleted { get; set; }
     }
