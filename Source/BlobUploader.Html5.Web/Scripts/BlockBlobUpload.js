@@ -1,7 +1,14 @@
-﻿var uploader;
+﻿/*global Node, FormData, $ */
+var uploader;
 var jqxhr;
 var maxRetries = 1;
-var operationType = { "METADATA_SEND": 0, "CANCELLED": 1, "RESUME_UPLOAD": 2, "METADATA_FAILED": 3, "FILE_NOT_SELECTED": 4 };
+var operationType = {
+    "METADATA_SEND": 0,
+    "CANCELLED": 1,
+    "RESUME_UPLOAD": 2,
+    "METADATA_FAILED": 3,
+    "FILE_NOT_SELECTED": 4
+};
 
 function ChunkedUploader(controlElements) {
     this.file = controlElements.fileControl.files[0];
@@ -29,14 +36,14 @@ function ChunkedUploader(controlElements) {
         if (message) {
             this.statusLabel.appendChild(document.createTextNode(message));
         }
-    }
+    };
 
     this.initializeUpload = function () {
         this.displayStatusMessage('');
         this.uploadButton.setAttribute('disabled', 'disabled');
         this.fileControl.setAttribute('disabled', 'disabled');
         this.cancelButton.removeAttribute('disabled');
-    }
+    };
 
     this.resetControls = function () {
         this.progressElement.setAttribute('hidden', 'hidden');
@@ -44,7 +51,7 @@ function ChunkedUploader(controlElements) {
         this.fileControl.removeAttribute('disabled');
         this.uploadButton.removeAttribute('disabled');
         this.fileControl.value = '';
-    }
+    };
 
     this.displayLabel = function (operation) {
         switch (operation) {
@@ -64,31 +71,35 @@ function ChunkedUploader(controlElements) {
                 this.displayStatusMessage('Please select a file.');
                 break;
         }
-    }
+    };
 
     this.uploadError = function (message) {
         this.displayStatusMessage('The file could not be uploaded because ' + message + '. Cancelling upload.');
-        if (jqxhr != null) {
+        if (jqxhr !== null) {
             jqxhr.abort();
         }
-    }
+    };
 
     this.renderProgress = function (blocksCompleted) {
-        percentCompleted = Math.floor((blocksCompleted - 1) * 100 / this.totalBlocks);
+        var percentCompleted = Math.floor((blocksCompleted - 1) * 100 / this.totalBlocks);
         this.progressElement.removeAttribute('hidden');
         this.progressElement.setAttribute('value', percentCompleted.toString());
         this.displayStatusMessage("Completed: " + percentCompleted + '%');
-    }
+    };
 }
 
 function cancelUpload() {
-    if (jqxhr != null) {
+    if (jqxhr !== null) {
         jqxhr.abort();
     }
 }
 
 var sendFile = function (blockLength) {
-    var start = 0, end = Math.min(blockLength, uploader.file.size) - 1, incrimentalIdentifier = 1, retryCount = 0, sendNextChunk, fileChunk, percentCompleted = 0;
+    var start = 0,
+        end = Math.min(blockLength, uploader.file.size) - 1,
+        incrimentalIdentifier = 1,
+        retryCount = 0,
+        sendNextChunk, fileChunk;
     uploader.displayStatusMessage('');
     sendNextChunk = function () {
         fileChunk = new FormData();
@@ -157,7 +168,7 @@ function startUpload(fileElementId, blockLength, uploadProgressElement, statusLa
         "totalBlocks": 0
     });
     uploader.initializeUpload();
-    if (uploader.file == null || uploader.file.size <= 0) {
+    if (uploader.file === null || uploader.file.size <= 0) {
         uploader.displayLabel(operationType.FILE_NOT_SELECTED);
         uploader.resetControls();
         return;
@@ -170,7 +181,11 @@ function startUpload(fileElementId, blockLength, uploadProgressElement, statusLa
         type: "POST",
         async: true,
         url: '/Home/PrepareMetaData',
-        data: { 'blocksCount': uploader.totalBlocks, 'fileName': uploader.file.name, 'fileSize': uploader.file.size },
+        data: {
+            'blocksCount': uploader.totalBlocks,
+            'fileName': uploader.file.name,
+            'fileSize': uploader.file.size
+        },
         dataType: "json",
         error: function () {
             uploader.displayLabel(operationType.METADATA_FAILED);
