@@ -1,59 +1,65 @@
-﻿/*global Node, FormData, $ */
+﻿/*!
+* <copyright file="BlockBlobUpload.js" company="Microsoft Corporation">
+*  Copyright 2011 Microsoft Corporation
+* </copyright>
+* Licensed under the MICROSOFT LIMITED PUBLIC LICENSE version 1.1 (the "License"); 
+* You may not use this file except in compliance with the License. 
+*/
+
+/*global Node, FormData, $ */
 var uploader;
 var jqxhr;
-var maxRetries = 1;
+var maxRetries = 3;
+var retryAfterSeconds = 5;
 var operationType = {
     "METADATA_SEND": 0,
     "CANCELLED": 1,
     "RESUME_UPLOAD": 2,
     "METADATA_FAILED": 3,
-    "FILE_NOT_SELECTED": 4
+    "FILE_NOT_SELECTED": 4,
+    "UNSUPPORTED_BROWSER": 5
 };
 
-function ChunkedUploader(controlElements) {
-    this.file = controlElements.fileControl.files[0];
-    this.fileControl = controlElements.fileControl;
-    this.statusLabel = controlElements.statusLabel;
-    this.progressElement = controlElements.progressElement;
-    this.uploadButton = controlElements.uploadButton;
-    this.cancelButton = controlElements.cancelButton;
-    this.totalBlocks = controlElements.totalBlocks;
-
-    function isElementNode(node) {
+var ChunkedUploader = {
+    constructor: function (controlElements) {
+        this.file = controlElements.fileControl.files[0];
+        this.fileControl = controlElements.fileControl;
+        this.statusLabel = controlElements.statusLabel;
+        this.progressElement = controlElements.progressElement;
+        this.uploadButton = controlElements.uploadButton;
+        this.cancelButton = controlElements.cancelButton;
+        this.totalBlocks = controlElements.totalBlocks;
+    },
+    isElementNode: function (node) {
         return !!(node.nodeType && node.nodeType === Node.ELEMENT_NODE);
-    }
-
-    function clearChildren(node) {
-        if (isElementNode(node)) {
+    },
+    clearChildren: function (node) {
+        if (this.isElementNode(node)) {
             while (node.firstChild) {
                 node.removeChild(node.firstChild);
             }
         }
-    }
-
-    this.displayStatusMessage = function (message) {
-        clearChildren(this.statusLabel);
+    },
+    displayStatusMessage: function (message) {
+        this.clearChildren(this.statusLabel);
         if (message) {
             this.statusLabel.appendChild(document.createTextNode(message));
         }
-    };
-
-    this.initializeUpload = function () {
+    },
+    initializeUpload: function () {
         this.displayStatusMessage('');
         this.uploadButton.setAttribute('disabled', 'disabled');
         this.fileControl.setAttribute('disabled', 'disabled');
         this.cancelButton.removeAttribute('disabled');
-    };
-
-    this.resetControls = function () {
+    },
+    resetControls: function () {
         this.progressElement.setAttribute('hidden', 'hidden');
         this.cancelButton.setAttribute('disabled', 'disabled');
         this.fileControl.removeAttribute('disabled');
         this.uploadButton.removeAttribute('disabled');
         this.fileControl.value = '';
-    };
-
-    this.displayLabel = function (operation) {
+    },
+    displayLabel: function (operation) {
         switch (operation) {
             case operationType.METADATA_SEND:
                 this.displayStatusMessage('Sending file metadata to server. Please wait.');
@@ -70,29 +76,30 @@ function ChunkedUploader(controlElements) {
             case operationType.FILE_NOT_SELECTED:
                 this.displayStatusMessage('Please select a file.');
                 break;
+            case operation.UNSUPPORTED_BROWSER:
+                this.displayLabel("Your browser does not support this functionality.");
+                break;
         }
-    };
-
-    this.uploadError = function (message) {
-        this.displayStatusMessage('The file could not be uploaded because ' + message + '. Cancelling upload.');
+    },
+    uploadError: function (message) {
+        this.displayStatusMessage('The file could not be uploaded' + (message ? 'because ' + message : '') + '. Operation aborted.');
         if (jqxhr !== null) {
             jqxhr.abort();
         }
-    };
-
-    this.renderProgress = function (blocksCompleted) {
+    },
+    renderProgress: function (blocksCompleted) {
         var percentCompleted = Math.floor((blocksCompleted - 1) * 100 / this.totalBlocks);
         this.progressElement.removeAttribute('hidden');
         this.progressElement.setAttribute('value', percentCompleted.toString());
         this.displayStatusMessage("Completed: " + percentCompleted + '%');
-    };
-}
+    }
+};
 
-function cancelUpload() {
+cancelUpload = function () {
     if (jqxhr !== null) {
         jqxhr.abort();
     }
-}
+};
 
 var sendFile = function (blockLength) {
     var start = 0,
@@ -100,11 +107,23 @@ var sendFile = function (blockLength) {
         incrimentalIdentifier = 1,
         retryCount = 0,
         sendNextChunk, fileChunk;
-    uploader.displayStatusMessage('');
+    uploader.displayStatusMessage();
     sendNextChunk = function () {
         fileChunk = new FormData();
         uploader.renderProgress(incrimentalIdentifier);
-        fileChunk.append('Slice', uploader.file.webkitSlice(start, end));
+        if (uploader.file.slice) {
+            fileChunk.append('Slice', uploader.file.slice(start, end));
+        }
+        else if (uploader.file.webkitSlice) {
+            fileChunk.append('Slice', uploader.file.webkitSlice(start, end));
+        }
+        else if (uploader.file.mozSlice) {
+            fileChunk.append('Slice', uploader.file.mozSlice(start, end));
+        }
+        else {
+            uploader.displayLabel(operationType.UNSUPPORTED_BROWSER);
+            return;
+        }
         jqxhr = $.ajax({
             async: true,
             url: ('/Home/UploadBlock/' + incrimentalIdentifier),
@@ -116,7 +135,7 @@ var sendFile = function (blockLength) {
             error: function (request, error) {
                 if (error != 'abort' && retryCount < maxRetries) {
                     ++retryCount;
-                    sendNextChunk();
+                    setTimeout(sendNextChunk, retryAfterSeconds * 1000);
                 }
 
                 if (error == 'abort') {
@@ -159,7 +178,13 @@ var sendFile = function (blockLength) {
 };
 
 function startUpload(fileElementId, blockLength, uploadProgressElement, statusLabel, uploadButton, cancelButton) {
-    uploader = new ChunkedUploader({
+    if (!window.FileList) {
+        alert("Incompatible browser.");
+        return;
+    }
+
+    uploader = Object.create(ChunkedUploader);
+    uploader.constructor({
         "fileControl": document.getElementById(fileElementId),
         "statusLabel": document.getElementById(statusLabel),
         "progressElement": document.getElementById(uploadProgressElement),
@@ -168,7 +193,7 @@ function startUpload(fileElementId, blockLength, uploadProgressElement, statusLa
         "totalBlocks": 0
     });
     uploader.initializeUpload();
-    if (uploader.file === null || uploader.file.size <= 0) {
+    if (typeof uploader.file === "undefined" || uploader.file.size <= 0) {
         uploader.displayLabel(operationType.FILE_NOT_SELECTED);
         uploader.resetControls();
         return;
