@@ -121,6 +121,10 @@ namespace BlobUploader.Html5.Web.Controllers
                     return Json(new { error = errorInOperation, isLastBlock = model.IsUploadCompleted, message = model.UploadStatusMessage });
                 }
             }
+            else
+            {
+                return Json(new { error = true, isLastBlock = false, message = string.Format(Resources.FailedToUploadFileMessage, Resources.SessonExpired) });
+            }
 
             return Json(new { error = false, isLastBlock = false, message = string.Empty });
         }

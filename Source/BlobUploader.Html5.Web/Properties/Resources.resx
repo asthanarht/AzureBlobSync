@@ -123,4 +123,7 @@
   <data name="FileUploadedMessage" xml:space="preserve">
     <value>File of size {0} has been uploaded successfully in {1} seconds.</value>
   </data>
+  <data name="SessonExpired" xml:space="preserve">
+    <value>session has expired. Please upload the file again</value>
+  </data>
 </root>

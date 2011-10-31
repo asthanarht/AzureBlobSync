@@ -77,5 +77,14 @@ namespace BlobUploader.Html5.Web.Properties {
                 return ResourceManager.GetString("FileUploadedMessage", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to session has expired. Please upload the file again.
+        /// </summary>
+        internal static string SessonExpired {
+            get {
+                return ResourceManager.GetString("SessonExpired", resourceCulture);
+            }
+        }
     }
 }
