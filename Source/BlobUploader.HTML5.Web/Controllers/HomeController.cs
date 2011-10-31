@@ -95,17 +95,30 @@ namespace BlobUploader.Html5.Web.Controllers
 
                 if (id == model.BlockCount)
                 {
-                    var blockList = Enumerable.Range(1, (int)model.BlockCount).ToList<int>().ConvertAll(rangeElement => Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", rangeElement))));
-                    model.BlockBlob.PutBlockList(blockList);
-                    var duration = DateTime.Now - model.StartTime;
                     model.IsUploadCompleted = true;
-                    float fileSizeInKb = model.FileSize / Constants.BytesPerKb;
-                    string fileSizeMessage = fileSizeInKb > Constants.BytesPerKb ?
-                        string.Concat((fileSizeInKb / Constants.BytesPerKb).ToString(), " MB") :
-                        string.Concat(fileSizeInKb.ToString(), " KB");
-                    model.UploadStatusMessage = string.Format(Resources.FileUploadedMessage, fileSizeMessage, duration.TotalSeconds);
-                    Session.Clear();
-                    return Json(new { error = false, isLastBlock = true, message = model.UploadStatusMessage });
+                    bool errorInOperation = false;
+                    try
+                    {
+                        var blockList = Enumerable.Range(1, (int)model.BlockCount).ToList<int>().ConvertAll(rangeElement => Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format(CultureInfo.InvariantCulture, "{0:D4}", rangeElement))));
+                        model.BlockBlob.PutBlockList(blockList);
+                        var duration = DateTime.Now - model.StartTime;
+                        float fileSizeInKb = model.FileSize / Constants.BytesPerKb;
+                        string fileSizeMessage = fileSizeInKb > Constants.BytesPerKb ?
+                            string.Concat((fileSizeInKb / Constants.BytesPerKb).ToString(), " MB") :
+                            string.Concat(fileSizeInKb.ToString(), " KB");
+                        model.UploadStatusMessage = string.Format(Resources.FileUploadedMessage, fileSizeMessage, duration.TotalSeconds);
+                    }
+                    catch (StorageException e)
+                    {
+                        model.UploadStatusMessage = string.Format(Resources.FailedToUploadFileMessage, e.Message);
+                        errorInOperation = true;
+                    }
+                    finally
+                    {
+                        Session.Clear();
+                    }
+
+                    return Json(new { error = errorInOperation, isLastBlock = model.IsUploadCompleted, message = model.UploadStatusMessage });
                 }
             }
 

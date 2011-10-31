@@ -216,8 +216,10 @@ function startUpload(fileElementId, blockLength, uploadProgressElement, statusLa
             uploader.displayLabel(operationType.METADATA_FAILED);
             uploader.resetControls();
         },
-        success: function () {
-            sendFile(blockLength);
+        success: function (operationState) {
+            if (operationState === true) {
+                sendFile(blockLength);
+            }
         }
     });
 }
