@@ -1,11 +1,4 @@
-﻿//----------------------------------------------------------------------------------------------------------------------------
-// <copyright file="Global.asax.cs" company="Microsoft Corporation">
-//  Copyright 2011 Microsoft Corporation
-// </copyright>
-// Licensed under the MICROSOFT LIMITED PUBLIC LICENSE version 1.1 (the "License"); 
-// You may not use this file except in compliance with the License. 
-//---------------------------------------------------------------------------------------------------------------------------
-
+﻿
 namespace BlobUploader.Html5.Web
 {
     using System.Web.Mvc;
